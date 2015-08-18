@@ -7,14 +7,17 @@
 -- History
 --[[
 
-v.2015081701
-  - First release.
+v.2015081802
+  - Register commands into MCServer
 
 v.2015081801
   - Add more security. SQL injection.
 
+v.2015081701
+  - First release.
+
+
 Future:
-  - Register commands intu MCServer
   - Show records in database
 
 --]]
@@ -26,28 +29,34 @@ LOG_DB = nil
 -------------------------------------------------------------------------------
 
 function Initialize(Plugin)
- Plugin:SetName("Logger")
- Plugin:SetVersion(2015081801)
+  Plugin:SetName("Logger")
+  Plugin:SetVersion(2015081802)
 
- PLUGIN = Plugin
+  PLUGIN = Plugin
 
- LOG("Logger: Begin " .. Plugin:GetName() .. " initialize...")
+  LOG("Logger: Begin " .. Plugin:GetName() .. " initialize...")
 
- -- Setup hooks
- cPluginManager.AddHook(cPluginManager.HOOK_CHAT, OnMessageSend)
- cPluginManager:AddHook(cPluginManager.HOOK_EXECUTE_COMMAND, MyOnExecuteCommand);
+  -- Setup hooks
+  cPluginManager.AddHook(cPluginManager.HOOK_CHAT, OnMessageSend)
+  cPluginManager:AddHook(cPluginManager.HOOK_EXECUTE_COMMAND, MyOnExecuteCommand);
 
- -- Create or open database
- LOG("Logger: Open database logger.sqlite3...")
- LOG_DB = sqlite3.open("logger.sqlite3")
+  -- Load the InfoReg shared library:
+  dofile(cPluginManager:GetPluginsPath() .. "/InfoReg.lua")
 
- LOG("Logger: Create database if not exists")
- create_database()
+  -- Bind all the console commands:
+  RegisterPluginInfoConsoleCommands()
 
- -- Nice message :)
- LOG("Logger: Initialized " .. Plugin:GetName() .. " v." .. Plugin:GetVersion())
+  -- Create or open database
+  LOG("Logger: Open database logger.sqlite3...")
+  LOG_DB = sqlite3.open("logger.sqlite3")
 
- return true
+  LOG("Logger: Create database if not exists")
+  create_database()
+
+  -- Nice message :)
+  LOG("Logger: Initialized " .. Plugin:GetName() .. " v." .. Plugin:GetVersion())
+
+  return true
 end
 
 -------------------------------------------------------------------------------
@@ -100,20 +109,9 @@ end
 -------------------------------------------------------------------------------
 
 function MyOnExecuteCommand(Player, CommandSplit, EntireCommand)
--- Loggining user's command line in game
 -- Loggining server console commands
--- Add new commands into server console or log it
 
- help_string=[[
-
-
-  logger count - show count of database records
-  logger backup - create backup file
-  logger clean - clean database data. Not settings. Do not create backup file
-  logger shrink - rename current database file and create new
- ]]
-
- -- If Player is nil (null) - create custom class. It's console data
+ -- If Player is nil (null) - create custom class. It's console data. Always nil
  if not Player then
   Player = {}
   function Player:GetName()
@@ -121,27 +119,9 @@ function MyOnExecuteCommand(Player, CommandSplit, EntireCommand)
   end
  end
 
- -- Check exists commands
- if EntireCommand == "logger count" then
-  LOG_DB:exec("SELECT count(*) from data;", sql_result_process)
-
- elseif EntireCommand == "logger clean" then
-  LOG_DB:exec("DELETE from data;")
-
- elseif EntireCommand == "logger backup" or EntireCommand == "logger shrink" then
-  LOG("Logger: Under cunstruction :)")
-
- elseif EntireCommand == "logger" or EntireCommand == "logger help" then
-  LOG(help_string)
-
- else
-  -- Unknown command for logger. Log it
-  LOG("Logger: Save console command")
   OnMessageSend(Player, EntireCommand)
 
- end
-
- return true
+  return false
 end
 
 -------------------------------------------------------------------------------
@@ -151,7 +131,29 @@ function sql_result_process(udata, cols, values, names)
 
  LOG("Database records count: " .. values[1])
 
- return 0
+ return true
+end
+
+-------------------------------------------------------------------------------
+
+function  HandleConsoleDBCount()
+-- Database records count
+
+  LOG_DB:exec("SELECT count(*) from data;", sql_result_process)
+
+  return true
+end
+
+-------------------------------------------------------------------------------
+
+function HandleConsoleDBClean()
+-- Delete all database records
+
+  LOG_DB:exec("DELETE from data;")
+
+  HandleConsoleDBCount()
+
+  return true
 end
 
 -------------------------------------------------------------------------------
