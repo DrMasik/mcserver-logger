@@ -2,6 +2,22 @@
 -- Chat logger main file
 --
 -- Record all commands on the server console and user's game console
+-- http://forum.mc-server.org/showthread.php?tid=2085
+-------------------------------------------------------------------------------
+-- History
+--[[
+
+v.2015081701
+  - First release.
+
+v.2015081801
+  - Add more security. SQL injection.
+
+Future:
+  - Register commands intu MCServer
+  - Show records in database
+
+--]]
 -------------------------------------------------------------------------------
 
 PLUGIN = nil
@@ -11,7 +27,7 @@ LOG_DB = nil
 
 function Initialize(Plugin)
  Plugin:SetName("Logger")
- Plugin:SetVersion(2015081701)
+ Plugin:SetVersion(2015081801)
 
  PLUGIN = Plugin
 
@@ -49,9 +65,25 @@ function OnMessageSend(Player, Message)
  -- Player:GetIP()
  -- Message
 
- sql="INSERT INTO data VALUES('".. Player:GetName() .. "', '" .. Message .. "', " .. os.time() .. ");"
+  local stmt = LOG_DB:prepare("INSERT INTO data (login, message, date) VALUES (?, ?, ?)")
+  local ret = stmt:bind_values(Player:GetName(), Message, os.time())
 
- LOG_DB:exec(sql)
+  if ret ~= 0 then
+    LOG("Logger: Can\'t execute stmt:bind_values. Error code :" .. ret)
+    return 1
+  end
+
+  ret = stmt:step()
+  if ret ~= 0 and ret ~=101 then
+    LOG("Logger: Can\'t execute stmt:step(). Error code :" .. ret)
+    return 1
+  end
+
+  ret = stmt:finalize()
+  if ret ~= 0 then
+    LOG("Logger: Can\'t execute stmt:finalize(). Error code :" .. ret)
+    return 1
+  end
 end
 
 -------------------------------------------------------------------------------
