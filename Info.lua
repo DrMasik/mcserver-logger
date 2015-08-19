@@ -5,11 +5,11 @@
 -------------------------------------------------------------------------------
 
 g_PluginInfo = {
-  Name = "Logger",
-  Version = "2015081802",
-  Date = "2015-08-18",
+        Name = "Logger",
+  Version = "2015081901",
+        Date = "2015-08-19",
   SourceLocation = "https://github.com/DrMasik/mcserver-logger",
-  Description = [[Record all commands on the server console and user's game console.]],
+        Description = [[Record all commands on the server console and user's game console.]],
 
   ConsoleCommands = {
     logger = {
@@ -19,12 +19,21 @@ g_PluginInfo = {
           HelpString = "Database records count",
           Handler = HandleConsoleDBCount,
         },
+
         clean = {
           HelpString = "Clean database (delete all records).",
           Handler = HandleConsoleDBClean,
+        },
+        
+        show = {
+          HelpString = "Show database records, sorted by date in reverse order",
+          Handler = HandleConsoleDBShow,
+          ParameterCombinations = {
+            Params = "count",
+            HelpString = "Return last <count> records"
+          },
         },
       },
     },
   },
 }
-
