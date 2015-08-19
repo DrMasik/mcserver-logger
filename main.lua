@@ -7,8 +7,12 @@
 -- History
 --[[
 
-v 1.0
-  - Moved from date version to numeric (major.minor)
+v.2
+  - Add some optimization from forum comments into function HandleConsoleDBShow
+    (http://forum.mc-server.org/showthread.php?tid=2085&pid=22136#pid22136)
+
+v.1
+  - Moved from date version to numeric
   - Add some optimization from forum comments into function HandleConsoleDBShow
     (http://forum.mc-server.org/showthread.php?tid=2085&pid=22135#pid22135)
 
@@ -41,7 +45,7 @@ LOG_DB = nil
 
 function Initialize(Plugin)
   Plugin:SetName("Logger")
-  Plugin:SetVersion(2015081902)
+  Plugin:SetVersion(2)
  
   PLUGIN = Plugin
 
@@ -176,22 +180,19 @@ end
 function HandleConsoleDBShow(Split)
 -- Show database record
 
-  local split_count = 0
-  local ret_rows_count = ";"
-  local rcon_output = ""
+  local out = {}
+  local n = 1
 
-  ret_rows_count = " LIMIT " .. math.floor(tonumber(Split[3]) or 30)
+  local ret_rows_count = " LIMIT " .. math.floor(tonumber(Split[3]) or 30)
 
   -- Display the database
   for row in LOG_DB:nrows("SELECT date, login, message from data order by date desc" .. ret_rows_count) do
-    tmp_str = row.date .. " | " .. row.login .. " | " .. row.message
-    -- print (tmp_str)                                                                                                                                     
-
-    -- Create string for RCON
-    rcon_output = rcon_output .. tmp_str .. "\n"
+    out[n] = row.date .. " | " .. row.login .. " | " .. row.message
+    n = n + 1
   end
 
-  return true, rcon_output
+  return true, table.concat(out, "\n")
 end
 
 -------------------------------------------------------------------------------
+
