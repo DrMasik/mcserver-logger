@@ -190,7 +190,7 @@ function HandleConsoleDBShow(Split)
   -- Display the database
   for row in LOG_DB:nrows("SELECT date, login, message from data order by date desc" .. ret_rows_count) do
     tmp_str = row.date .. " | " .. row.login .. " | " .. row.message
-    print (tmp_str)                                                                                                                                     
+    -- print (tmp_str)                                                                                                                                     
 
     -- Create string for RCON
     rcon_output = rcon_output .. tmp_str .. "\n"
