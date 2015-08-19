@@ -7,6 +7,11 @@
 -- History
 --[[
 
+v 1.0
+  - Moved from date version to numeric (major.minor)
+  - Add some optimization from forum comments into function HandleConsoleDBShow
+    (http://forum.mc-server.org/showthread.php?tid=2085&pid=22135#pid22135)
+
 v.2015081902
   - Add index login and login_date                                                                                                                      
 
@@ -175,17 +180,7 @@ function HandleConsoleDBShow(Split)
   local ret_rows_count = ";"
   local rcon_output = ""
 
-  -- The number of params
-  for i in pairs(Split) do
-    split_count = split_count + 1
-  end
-
-  -- The number of output lines
-  if split_count > 2 then
-    if tonumber(Split[3]) ~= nil then
-      ret_rows_count = " LIMIT " .. math.floor(Split[3]) .. ";"
-    end
-  end
+  ret_rows_count = " LIMIT " .. math.floor(tonumber(Split[3]) or 30)
 
   -- Display the database
   for row in LOG_DB:nrows("SELECT date, login, message from data order by date desc" .. ret_rows_count) do
